@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Бункер Онлайн — Главное Меню</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #141e30, #243b55);
+      color: white;
+    }
+
+    .container {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 30px;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 48px;
+      margin-bottom: 10px;
+      animation: fadeIn 1s ease forwards;
+    }
+
+    p.description {
+      font-size: 20px;
+      max-width: 600px;
+      margin-bottom: 40px;
+      color: #dcdcdc;
+      animation: fadeIn 1.5s ease forwards;
+    }
+
+    .menu {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+      width: 100%;
+      max-width: 400px;
+      animation: fadeInUp 1s ease forwards;
+    }
+
+    input {
+      width: 100%;
+      padding: 16px;
+      margin: 15px 0;
+      border: none;
+      border-radius: 12px;
+      font-size: 18px;
+      transition: 0.3s ease;
+    }
+
+    input:focus {
+      outline: none;
+      transform: scale(1.03);
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.4);
+    }
+
+    button {
+      width: 100%;
+      padding: 18px;
+      margin-top: 20px;
+      font-size: 20px;
+      background: #6c63ff;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: 0.3s ease;
+    }
+
+    button:hover {
+      background: #5146e1;
+      transform: scale(1.04);
+    }
+
+    @keyframes fadeInUp {
+      0% {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0 }
+      to { opacity: 1 }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Бункер Онлайн</h1>
+    <p class="description">
+      Добро пожаловать в онлайн-версию психологической игры «Бункер».  
+      Введите своё имя, при необходимости ID комнаты и выберите действие ниже.
+    </p>
+    <div class="menu">
+      <input type="text" id="name" placeholder="Ваше имя">
+      <input type="text" id="room-id" placeholder="ID комнаты (только для входа)">
+      <button onclick="createLobby()">Создать лобби</button>
+      <button onclick="joinLobby()">Подсоединиться</button>
+    </div>
+  </div>
+
+  <script>
+    const BASE_URL = 'http://127.0.0.1:8080';
+
+    function redirect_to_lobby(lobby_id){
+      window.location.href = BASE_URL + '/lobby/' + lobby_id;
+    }
+
+    function connect_to_lobby(lobby_id){
+        fetch(BASE_URL + '/menu/connect_to_session', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ 
+            session_id: lobby_id
+          })
+          
+        }).then(() => {
+          redirect_to_lobby(lobby_id);
+        })
+    }
+
+    function login_user(){
+      const name = document.getElementById('name').value.trim();
+
+      return fetch(BASE_URL + '/menu/login_user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ 
+          username: name
+        })
+        
+      })
+
+    }
+
+    function createLobby() {
+      const name = document.getElementById('name').value.trim();
+      if (!name) return alert("Пожалуйста, введите имя.");
+      login_user().then(() =>{
+
+        fetch(BASE_URL + '/menu/create_session', {
+          method: 'POST',
+          body: JSON.stringify({ 
+            username: name
+          })
+
+          
+        }).then(response => {
+          if (response.ok) {
+            alert("Лобби создано успешно!");
+            response.json().then(data => {
+              console.log("Lobby created with ID:", data.session_id);
+              connect_to_lobby(data.session_id);
+            });
+          } })
+
+      })
+      
+    }
+
+    function joinLobby() {
+      const name = document.getElementById('name').value.trim();
+      const roomId = document.getElementById('room-id').value.trim();
+      if (!name || !roomId) return alert("Введите имя и ID комнаты.");
+      login_user().then(() => {
+        connect_to_lobby(roomId);
+      })
+      // Здесь можно вызвать логику подключения
+    }
+  </script>
+</body>
+</html>

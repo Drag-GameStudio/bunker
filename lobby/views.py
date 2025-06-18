@@ -1,0 +1,19 @@
+from django.shortcuts import render
+from django.http import HttpResponse
+from .models import User, Session
+
+# Create your views here.
+def render_lobby(request, lobby_id):
+    """
+    Render the lobby page.
+    """
+
+    user_id = request.COOKIES.get("user_id")
+    user = User.objects.filter(id=user_id).first()
+    if user is None:
+        return HttpResponse("User not found.", status=404)
+    
+    if int(lobby_id) == user.session.id:
+        return render(request, "lobby/lobby.html", {"lobby_id": lobby_id})
+    
+    return HttpResponse("You are not allowed to view this lobby.", status=403)

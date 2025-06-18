@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Лобби — Бункер Онлайн</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #1f1c2c, #928dab);
+      color: white;
+    }
+
+    .container {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 44px;
+      margin-bottom: 10px;
+      animation: fadeIn 1s ease forwards;
+    }
+
+    p.lobby-id {
+      font-size: 18px;
+      color: #ccc;
+      margin-bottom: 30px;
+    }
+
+    .user-list {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 20px;
+      width: 100%;
+      max-width: 500px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      min-height: 200px;
+      text-align: left;
+      margin-bottom: 30px;
+      animation: fadeInUp 0.8s ease forwards;
+    }
+
+    .user {
+      font-size: 20px;
+      padding: 8px 12px;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 10px;
+      margin: 8px 0;
+      animation: slideIn 0.3s ease forwards;
+    }
+
+    button {
+      padding: 16px 32px;
+      font-size: 20px;
+      background: #6c63ff;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: 0.3s ease;
+    }
+
+    button:hover {
+      background: #4e44d5;
+      transform: scale(1.03);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-20px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Лобби</h1>
+    <p class="lobby-id">ID комнаты: <strong>{{ lobby_id }}</strong></p>
+
+    <div class="user-list" id="user-list">
+      <!-- Пользователи будут добавлены сюда -->
+    </div>
+
+    <button onclick="startGame()">Старт</button>
+  </div>
+
+  <script>
+    const BASE_URL = "http://127.0.1:8080";
+    const userList = document.getElementById('user-list');
+
+
+    const lobby_socket = new WebSocket("ws://" + "127.0.1:8080" + "/ws/lobby/");
+
+
+    lobby_socket.onmessage = function(event) {
+        const data = JSON.parse(event.data);
+        console.log("Получено сообщение:", data);
+        if (data.type == "join"){
+          addUser(data.username, data.user_id)
+        }
+        else if(data.type == "disconect_user"){
+          deleteUser(data.user_id)
+        }
+        else if(data.type == "load"){
+          for(i =0; i < data.usernames.length; i++){
+              console.log(data.usernames[i])
+            
+              addUser(data.usernames[i], data.users_id[i])
+          }
+        }
+
+    };
+
+
+    function addUser(name, user_id) {
+      const div = document.createElement('div');
+      div.className = 'user ' + "user" + user_id;
+      div.textContent = name;
+      userList.appendChild(div);
+    }
+
+    function deleteUser(user_id) {
+      const div = document.querySelector(".user-list .user" + user_id)
+      div.remove()
+    }
+
+
+    function startGame() {
+      alert("Игра начинается!");
+    }
+  </script>
+</body>
+</html>
