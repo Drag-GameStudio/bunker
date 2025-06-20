@@ -25,6 +25,10 @@ SECRET_KEY = "django-insecure-_l7b&4@!)^dt8%b8rs5ehh3gmiznq*=3_4acun2(ch9@%)9-2-
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+
+VARIABLE_OF_STATE = ["wating", "play", "ended"]
+
+
 ALLOWED_HOSTS = []
 
 

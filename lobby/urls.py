@@ -1,7 +1,8 @@
 from django.urls import path
-from .views import render_lobby
+from .views import render_lobby, isOwner
 urlpatterns = [
-    path("<str:lobby_id>", render_lobby)
+    path("<int:lobby_id>", render_lobby),
+    path("is_owner", isOwner)
 ]
 
 

@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Игровое поле — Бункер Онлайн</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      font-family: Arial, sans-serif;
+      background: #1e1e2f;
+      color: white;
+    }
+
+    .sidebar {
+      width: 280px;
+      background: #2e2e45;
+      padding: 20px;
+      box-shadow: 2px 0 10px rgba(0,0,0,0.4);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .sidebar h2 {
+      margin-top: 0;
+    }
+
+    .info-block {
+      background: #3a3a55;
+      border-radius: 10px;
+      padding: 10px;
+    }
+
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+    }
+
+    .top-info {
+      background: #303050;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .content-row {
+      flex: 1;
+      display: flex;
+      gap: 20px;
+    }
+
+    .cards {
+      width: 220px;
+      background: #3a3a55;
+      padding: 10px;
+      border-radius: 10px;
+    }
+
+    .center-display {
+      flex: 1;
+      background: #2c2c40;
+      border-radius: 10px;
+      padding: 20px;
+    }
+
+    .footer {
+      margin-top: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      background: #6c63ff;
+      border: none;
+      border-radius: 10px;
+      color: white;
+      cursor: pointer;
+      font-size: 16px;
+      margin-bottom: 20px;
+    }
+
+    .btn:hover {
+      background: #5146e1;
+    }
+
+    .center-display .user_card{
+        height: 400px;
+        width: 300px;
+        background: #3a3a55;
+        border-radius: 20px;
+        text-align: center;
+        position: relative;
+        display: inline-block;
+        margin-left: 30px;
+        margin-bottom: 10px;
+    }
+
+    .center-display .user_card .main_info{
+        position: absolute;
+        top: 60%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 20px;
+    }
+
+    .center-display .user_card h1{
+        position: absolute;
+        top: 5%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 50px;
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <h2>Вы</h2>
+    <div id="your_name" class="info-block">Имя: q0nty</div>
+    <div id="your_proff" class="info-block">Профессия: врач</div>
+    <div id="your_age" class="info-block">Возраст: 20</div>
+    <div id="your_hobby" class="info-block">Хобби: шахматы</div>
+    <div id="your_item" class="info-block">Предмет: фонарик</div>
+    <div id="your_health" class="info-block">Здоровье: норм</div>
+    <div id="your_fact" class="info-block">Факт: веган</div>
+  </div>
+
+  <div class="main">
+    <div class="top-info">
+      <h2>Инструкция</h2>
+      <p>Игра "Бункер Онлайн". Убежище на 10 человек. Цель — выжить.</p>
+    </div>
+
+    <div class="content-row">
+      <div class="cards">
+        <button id="open_proff" class="btn" onclick="open_card('profession')">Открыть профессию</button>
+        <button id="open_health" class="btn" onclick="open_card('health')">Открыть здоровье</button>
+        <button id="open_item" class="btn" onclick="open_card('item')">Открыть предмет</button>
+        <button id="open_age" class="btn" onclick="open_card('age')">Открыть возраст</button>
+        <button id="open_fact" class="btn" onclick="open_card('fact')">Открыть факт</button>
+        <button id="open_hobby" class="btn" onclick="open_card('hobby')">Открыть Хобби</button>
+      </div>
+
+      <div class="center-display" id="center-display">
+        <div class="user_card", id="user_{user_id}">
+            <h1>Name</h1>
+
+            <div class="main_info">
+                <p>Проффесия</p>
+                <p>Хобби</p>
+                <p>Возрост</p>
+                <p>Здоровье</p>
+                <p>Предмет</p>
+                <p>Факт</p>
+
+            </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <script>
+    const game_socket = new WebSocket("ws://127.0.0.1:8080/ws/game/");
+    function parseCookies() {
+        const cookies = document.cookie.split('; ');
+        const result = {};
+        cookies.forEach(cookie => {
+          const [key, value] = cookie.split('=');
+          result[key] = value;
+        });
+        return result;
+    }
+
+
+    game_socket.onmessage = function(event) {
+        const data = JSON.parse(event.data);
+        console.log("Получено:", data)
+        if (data.type == "load"){
+          load_all_info(data.data)
+        }
+    }
+
+    function open_card(str_key){
+        game_socket.send(JSON.stringify({
+            type: "open",
+            str_key: str_key
+        }))
+    }
+
+
+    function load_all_info(data){
+        const YOUR_USERS_ID = parseCookies()["user_id"]
+        const users_id = Object.keys(data)
+        for(i =0; i < users_id.length; i++){
+            if (YOUR_USERS_ID != users_id[i]){
+                del_user(users_id[i])
+                curr_data = data[users_id[i]]
+
+                info = [curr_data.profession, curr_data.hobby, curr_data.age, curr_data.health, curr_data.item, curr_data.fact]
+                addUser(users_id[i], curr_data.username, info)
+            }
+        }
+
+    }
+
+
+  </script>
+  <script>
+
+    const BASE_URL = "http://127.0.1:8080";
+
+    function load_self(){
+        fetch(BASE_URL + "/game/info", {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then(response => response.json())
+        .then(data => {
+            const proff = document.getElementById("your_proff")
+            const age = document.getElementById("your_age")
+            const item = document.getElementById("your_item")
+            const hobby = document.getElementById("your_hobby")
+            const fact = document.getElementById("your_fact")
+            const health = document.getElementById("your_health")
+
+
+            proff.innerHTML = data.profession.value
+            age.innerHTML = data.age.value
+            item.innerHTML = data.item.value
+            hobby.innerHTML = data.hobby.value
+            fact.innerHTML = data.fact.value
+            health.innerHTML = data.health.value
+
+
+            const open_proff = document.getElementById("open_proff")
+            const open_age = document.getElementById("open_age")
+            const open_item = document.getElementById("open_item")
+            const open_hobby = document.getElementById("open_hobby")
+            const open_fact = document.getElementById("open_fact")
+            const open_health = document.getElementById("open_health")
+
+            if (data.profession.is_open){
+                open_proff.remove()
+            }
+            if (data.age.is_open){
+                open_age.remove()
+            }if (data.health.is_open){
+                open_health.remove()
+            }if (data.fact.is_open){
+                open_fact.remove()
+            }if (data.item.is_open){
+                open_item.remove()
+            }
+            if (data.hobby.is_open){
+                open_hobby.remove()
+            }
+
+        })
+    }
+
+    function addUser(user_id, name, char){
+        const card = document.createElement('div');
+        card.className = 'user_card';
+        card.id = `user_${user_id}`;
+
+        // Заголовок (имя)
+        const nameHeader = document.createElement('h1');
+        nameHeader.textContent = name;
+        card.appendChild(nameHeader);
+
+        // Блок с основной информацией
+        const infoBlock = document.createElement('div');
+        infoBlock.className = 'main_info';
+
+        const labels = ['Профессия', 'Хобби', 'Возраст', 'Здоровье', 'Предмет', "Факт"];
+        console.log(info)
+
+        for (let i = 0; i < labels.length; i++) {
+            const p = document.createElement('p');
+            p.textContent = `${labels[i]}: ${char[i].value}`;
+            infoBlock.appendChild(p);
+        }
+
+        card.appendChild(infoBlock);
+
+        document.getElementById("center-display").appendChild(card);
+    }
+
+    function del_user(user_id){
+      const user_card = document.getElementById(`user_${user_id}`)
+      if (user_card != null){
+        user_card.remove()
+      }
+    }
+
+    function edit_user(user_id){
+
+    }
+
+
+
+    function vote() {
+      alert("Голос отправлен!");
+    }
+
+    function reveal() {
+      alert("Вы рассказали свою историю!");
+    }
+
+
+    load_self()
+
+  </script>
+</body>
+</html>

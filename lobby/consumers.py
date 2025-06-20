@@ -3,6 +3,7 @@ import json
 from .models import User, Session
 from asgiref.sync import sync_to_async
 import json
+from game.game_handler.session_rules_handler import start_game
 
 class LobbyConsumer(AsyncWebsocketConsumer):
     async def connect(self):
@@ -68,12 +69,33 @@ class LobbyConsumer(AsyncWebsocketConsumer):
 
     async def receive(self, text_data):
         json_data = json.loads(text_data)
+        if json_data["type"] == "start":
+            status = await self.start_game_async()
+        
+            if status:
+                await self.channel_layer.group_send(
+                    self.group_name,
+                    {
+                        "type": "start_game_on_client"
+                    }
+                )
+
+
 
     @sync_to_async
     def get_user(self, user_id):
         return User.objects.filter(id=user_id).first()
     
-    
+    @sync_to_async
+    def start_game_async(self):
+        if self.user.isOwner:
+            start_game(self.user.session)
+            return True
+        return False
+
+        
+
+
 
     @sync_to_async
     def get_user_session(self, user: User) -> Session:
@@ -100,6 +122,11 @@ class LobbyConsumer(AsyncWebsocketConsumer):
             "type": "join",
             "username": name,
             "user_id": user_id
+        }))
+
+    async def start_game_on_client(self, event):
+        await self.send(text_data=json.dumps({
+            "type": "start_game"
         }))
 
     async def disconect_user(self, event):

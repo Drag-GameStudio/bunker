@@ -3,6 +3,7 @@ from django.http import HttpResponse, JsonResponse
 from lobby.models import User, Session
 from django.views.decorators.csrf import csrf_exempt
 import json
+from bunker.settings import VARIABLE_OF_STATE
 
 # Create your views here.
 def render_menu(request):
@@ -36,14 +37,19 @@ def connect_to_session(request):
         data = json.loads(request.body)
         session_id = data.get("session_id")
 
+
         try:
             user = User.objects.get(id=user_id)
             session = Session.objects.get(id=session_id)
+            if session.state == VARIABLE_OF_STATE[0]:
 
-            user.session = session
-            user.save()
+                user.session = session
+                user.save()
 
-            return HttpResponse(f"User {user.username} connected to session {session.id}")
+                return HttpResponse(f"User {user.username} connected to session {session.id}")
+            
+            return HttpResponse(f"session have been started")
+            
         except User.DoesNotExist:
             return HttpResponse("User does not exist", status=404)
         except Session.DoesNotExist:

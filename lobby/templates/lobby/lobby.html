@@ -101,16 +101,39 @@
       <!-- Пользователи будут добавлены сюда -->
     </div>
 
-    <button onclick="startGame()">Старт</button>
+    <button id="start_button" onclick="startGame()">Старт</button>
   </div>
 
   <script>
     const BASE_URL = "http://127.0.1:8080";
     const userList = document.getElementById('user-list');
 
+    isOwner()
+
+    function isOwner(){
+      fetch(BASE_URL + '/lobby/is_owner', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+          
+          
+        }).then(response => response.json())
+        .then(data =>  {
+          is_owner = data.isOwner
+          if (is_owner == false){
+            document.getElementById("start_button").remove()
+          }
+        })
+    }
 
     const lobby_socket = new WebSocket("ws://" + "127.0.1:8080" + "/ws/lobby/");
 
+
+    function redirect_to_game(){
+      console.log("redirect")
+      window.location.href = BASE_URL + '/game';
+    }
 
     lobby_socket.onmessage = function(event) {
         const data = JSON.parse(event.data);
@@ -128,6 +151,10 @@
               addUser(data.usernames[i], data.users_id[i])
           }
         }
+        else if(data.type == "start_game"){
+          redirect_to_game()
+        }
+
 
     };
 
@@ -146,7 +173,9 @@
 
 
     function startGame() {
-      alert("Игра начинается!");
+      lobby_socket.send(JSON.stringify({
+        type: "start",
+    }));
     }
   </script>
 </body>
