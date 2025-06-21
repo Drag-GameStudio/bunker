@@ -9,6 +9,7 @@ def get_user_info(request):
     user_id = request.COOKIES.get("user_id")
     user = User.objects.filter(id=user_id).first()
     user_data = UserInfo.objects.filter(user=user).first()
+
     
     return JsonResponse(user_data.get_data_in_json())
 

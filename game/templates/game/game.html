@@ -93,7 +93,7 @@
 
     .center-display .user_card{
         height: 400px;
-        width: 300px;
+        width: 400px;
         background: #3a3a55;
         border-radius: 20px;
         text-align: center;
@@ -101,13 +101,15 @@
         display: inline-block;
         margin-left: 30px;
         margin-bottom: 10px;
+        
     }
 
     .center-display .user_card .main_info{
         position: absolute;
         top: 60%;
-        left: 50%;
-        transform: translate(-50%, -50%);
+        left: 5%;
+        transform: translate(0%, -50%);
+        text-align: left;
         font-size: 20px;
     }
 
@@ -118,6 +120,11 @@
         transform: translate(-50%, -50%);
         font-size: 50px;
     }
+
+    .center-display .active_card{
+      border: 3px solid rgb(104, 249, 1);
+    }
+
   </style>
 </head>
 <body>
@@ -149,7 +156,7 @@
       </div>
 
       <div class="center-display" id="center-display">
-        <div class="user_card", id="user_{user_id}">
+        <!-- <div class="user_card active_card", id="user_{user_id}">
             <h1>Name</h1>
 
             <div class="main_info">
@@ -162,7 +169,7 @@
 
             </div>
 
-        </div>
+        </div> -->
       </div>
     </div>
 
@@ -185,29 +192,47 @@
         console.log("Получено:", data)
         if (data.type == "load"){
           load_all_info(data.data)
+          load_all_game(data.game_info)
+          load_self()
         }
     }
 
     function open_card(str_key){
         game_socket.send(JSON.stringify({
-            type: "open",
-            str_key: str_key
+            type: "move",
+            move_type: "open_card",
+            data: {str_key: str_key}
         }))
     }
 
 
+    function load_all_game(data){
+      current_move_user = data.current_move_user
+      const parent = document.getElementById("center-display")
+      const childrenArray = Array.from(parent.children);
+
+      childrenArray.forEach(element => {
+        element.classList.remove("active_card")
+        
+      });
+
+
+      const curr_user = document.getElementById(`user_${current_move_user}`)
+      curr_user.classList.add("active_card")
+    }
+
     function load_all_info(data){
         const YOUR_USERS_ID = parseCookies()["user_id"]
         const users_id = Object.keys(data)
-        for(i =0; i < users_id.length; i++){
-            if (YOUR_USERS_ID != users_id[i]){
-                del_user(users_id[i])
-                curr_data = data[users_id[i]]
+        for(i = 0; i < users_id.length; i++){
+              del_user(users_id[i])
+              curr_data = data[users_id[i]]
 
-                info = [curr_data.profession, curr_data.hobby, curr_data.age, curr_data.health, curr_data.item, curr_data.fact]
-                addUser(users_id[i], curr_data.username, info)
-            }
+              info = [curr_data.profession, curr_data.hobby, curr_data.age, curr_data.health, curr_data.item, curr_data.fact]
+              addUser(users_id[i], curr_data.username, info)
         }
+
+        
 
     }
 
@@ -233,12 +258,12 @@
             const health = document.getElementById("your_health")
 
 
-            proff.innerHTML = data.profession.value
-            age.innerHTML = data.age.value
-            item.innerHTML = data.item.value
-            hobby.innerHTML = data.hobby.value
-            fact.innerHTML = data.fact.value
-            health.innerHTML = data.health.value
+            proff.innerHTML = `Професcия: ${data.profession.value}`
+            age.innerHTML = `Возраст: ${data.age.value}`
+            item.innerHTML = `Предмет: ${data.item.value}`
+            hobby.innerHTML = `Хобби: ${data.hobby.value}`
+            fact.innerHTML = `Факт: ${data.fact.value}`
+            health.innerHTML = `Здоровье: ${data.health.value}`
 
 
             const open_proff = document.getElementById("open_proff")
@@ -248,19 +273,19 @@
             const open_fact = document.getElementById("open_fact")
             const open_health = document.getElementById("open_health")
 
-            if (data.profession.is_open){
+            if (data.profession.is_open && open_proff != null){
                 open_proff.remove()
             }
-            if (data.age.is_open){
+            if (data.age.is_open && open_age != null){
                 open_age.remove()
-            }if (data.health.is_open){
+            }if (data.health.is_open && open_health != null){
                 open_health.remove()
-            }if (data.fact.is_open){
+            }if (data.fact.is_open && open_fact != null){
                 open_fact.remove()
-            }if (data.item.is_open){
+            }if (data.item.is_open && open_item != null){
                 open_item.remove()
             }
-            if (data.hobby.is_open){
+            if (data.hobby.is_open && open_hobby != null) {
                 open_hobby.remove()
             }
 

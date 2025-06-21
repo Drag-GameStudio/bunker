@@ -21,9 +21,22 @@ class Session(models.Model):
         
         return self.line_of_user.split(",")
     
+    def next_user_in_line(self) -> bool:
+        user_line = self.get_line()
+        curent_user_id = self.current_user
+        user_index = user_line.index(str(curent_user_id))
+        
+        if user_index + 1 > len(user_line) - 1:
+            self.current_user = user_line[0]
+            self.save()
+            return False
+        
+        self.current_user = user_line[user_index + 1]
+        self.save()
+
+        return True
 
 class User(models.Model):
-    
 
     id = models.AutoField(primary_key=True)
     username = models.CharField(max_length=100)
@@ -32,4 +45,8 @@ class User(models.Model):
 
     def __str__(self):
         return self.username
+    
+    def can_move(self) -> bool:
+        self.session.refresh_from_db()
+        return self.session.current_user == self.id
     

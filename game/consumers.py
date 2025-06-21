@@ -26,29 +26,61 @@ class GameConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         data = json.loads(text_data)
 
-        if data["type"] == "open":
-            await self.open_card(data["str_key"])
-            await self.load_all(self.group_name)
-
-        elif data["type"] == "load":
+        if data["type"] == "load":
             await self.load_all(self.individual_group_name)
+
+        elif data["type"] == "move":
+            await self.make_move(data["move_type"], data["data"])
 
     async def load_all(self, group):
         result_data = await self.get_all_user_secret()
+        game_info = await self.get_game_info()
+
         await self.channel_layer.group_send(
             group,
             {
                 "type": "load",
-                "data": result_data
+                "data": result_data,
+                "game_info": game_info
             }
         )
 
+    @sync_to_async
+    def get_game_info(self):
+        game_info = {}
+
+        self.user.refresh_from_db()
+        self.user.session.refresh_from_db()
+        game_info["current_move_user"] = self.user.session.current_user
+
+        return game_info
+
+    async def make_move(self, move_type, data):
+        if await self.can_move():
+
+            if move_type == "open_card":
+                await self.open_card(data["str_key"])
+
+            move_status = await self.make_move_on_session()
+            await self.load_all(self.group_name)
+
+
+    @sync_to_async
+    def can_move(self):
+        return self.user.can_move()
+
+    @sync_to_async
+    def make_move_on_session(self):
+        status = self.user.session.next_user_in_line()
+
+        return status
 
     @sync_to_async
     def open_card(self, str_key):
         card = UserInfo.objects.filter(user=self.user).first()
         setattr(card, f"{str_key}_is_open", True)
         card.save()
+        card.refresh_from_db()
 
     @sync_to_async
     def get_user(self, user_id):
@@ -75,9 +107,11 @@ class GameConsumer(AsyncWebsocketConsumer):
         
     async def load(self, event):
         data = event["data"]
+        game_info = event["game_info"]
 
         await self.send(text_data=json.dumps({
             "type": "load",
-            "data": data
+            "data": data,
+            "game_info": game_info
         }))
     
