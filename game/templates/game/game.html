@@ -125,12 +125,58 @@
       border: 3px solid rgb(104, 249, 1);
     }
 
+    .vote-container {
+      background: #2e2e45;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.4);
+      width: 400px;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      transition: top 3s ease;
+
+    }
+
+    .vote-container h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .vote_player {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #3a3a55;
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin-bottom: 12px;
+    }
+
+    .player-name {
+      font-size: 18px;
+    }
+
+    .vote-btn {
+      background: #6c63ff;
+      border: none;
+      padding: 8px 14px;
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .vote-btn:hover {
+      background: #5146e1;
+    }
+
   </style>
 </head>
 <body>
   <div class="sidebar">
     <h2>Вы</h2>
-    <div id="your_name" class="info-block">Имя: q0nty</div>
     <div id="your_proff" class="info-block">Профессия: врач</div>
     <div id="your_age" class="info-block">Возраст: 20</div>
     <div id="your_hobby" class="info-block">Хобби: шахматы</div>
@@ -141,41 +187,42 @@
 
   <div class="main">
     <div class="top-info">
-      <h2>Инструкция</h2>
-      <p>Игра "Бункер Онлайн". Убежище на 10 человек. Цель — выжить.</p>
+      <h2>Ситуация:</h2>
+      <p>{{situation}}</p>
     </div>
 
     <div class="content-row">
       <div class="cards">
         <button id="open_proff" class="btn" onclick="open_card('profession')">Открыть профессию</button>
-        <button id="open_health" class="btn" onclick="open_card('health')">Открыть здоровье</button>
-        <button id="open_item" class="btn" onclick="open_card('item')">Открыть предмет</button>
         <button id="open_age" class="btn" onclick="open_card('age')">Открыть возраст</button>
-        <button id="open_fact" class="btn" onclick="open_card('fact')">Открыть факт</button>
         <button id="open_hobby" class="btn" onclick="open_card('hobby')">Открыть Хобби</button>
+        <button id="open_item" class="btn" onclick="open_card('item')">Открыть предмет</button>
+        <button id="open_health" class="btn" onclick="open_card('health')">Открыть здоровье</button>
+        <button id="open_fact" class="btn" onclick="open_card('fact')">Открыть факт</button>
       </div>
 
       <div class="center-display" id="center-display">
-        <!-- <div class="user_card active_card", id="user_{user_id}">
-            <h1>Name</h1>
 
-            <div class="main_info">
-                <p>Проффесия</p>
-                <p>Хобби</p>
-                <p>Возрост</p>
-                <p>Здоровье</p>
-                <p>Предмет</p>
-                <p>Факт</p>
-
-            </div>
-
-        </div> -->
       </div>
     </div>
 
   </div>
-  <script>
-    const game_socket = new WebSocket("ws://127.0.0.1:8080/ws/game/");
+
+  <div class="vote-container" id="vote-container">
+    <h2>Проголосовать за игрока</h2>
+    <div id="players-list">
+    </div>
+  </div>
+
+
+  <script> // socket
+
+    const MIDDLELINK = "{{MIDDLELINK}}"
+    isAlive = true
+
+    const game_socket = new WebSocket("ws://" + MIDDLELINK +"/ws/game/");
+    
+    
     function parseCookies() {
         const cookies = document.cookie.split('; ');
         const result = {};
@@ -186,25 +233,36 @@
         return result;
     }
 
-
     game_socket.onmessage = function(event) {
         const data = JSON.parse(event.data);
-        console.log("Получено:", data)
         if (data.type == "load"){
           load_all_info(data.data)
           load_all_game(data.game_info)
           load_self()
         }
+        else if (data.type == "start_voiting"){
+          change_vote(1)
+          start_voiting(data.data)
+          
+        }
+        else if (data.type == "end_voiting"){
+          change_vote(0)
+        }
+        else if(data.type == "die"){
+          isAlive = false
+        }
     }
 
     function open_card(str_key){
+      if (isAlive == true)
+      {
         game_socket.send(JSON.stringify({
             type: "move",
             move_type: "open_card",
             data: {str_key: str_key}
         }))
+      }
     }
-
 
     function load_all_game(data){
       current_move_user = data.current_move_user
@@ -215,17 +273,30 @@
         element.classList.remove("active_card")
         
       });
-
-
       const curr_user = document.getElementById(`user_${current_move_user}`)
       curr_user.classList.add("active_card")
-    }
 
+
+      curr_lap_state = data.current_lap_state // Дописать
+
+      if (curr_lap_state == "voting"){
+        game_socket.send(JSON.stringify({
+          type: "load_voting"
+        }))
+      }
+    }
+ 
     function load_all_info(data){
+
+        const perent = document.getElementById("center-display")
+        while (perent.firstChild) {
+          perent.removeChild(perent.firstChild);
+      }
+
         const YOUR_USERS_ID = parseCookies()["user_id"]
         const users_id = Object.keys(data)
         for(i = 0; i < users_id.length; i++){
-              del_user(users_id[i])
+              // del_user(users_id[i])
               curr_data = data[users_id[i]]
 
               info = [curr_data.profession, curr_data.hobby, curr_data.age, curr_data.health, curr_data.item, curr_data.fact]
@@ -238,11 +309,21 @@
 
 
   </script>
-  <script>
+  <script> // http
 
-    const BASE_URL = "http://127.0.1:8080";
+    const BASE_URL = window.location.origin;
 
     function load_self(){
+        fetch(BASE_URL + "/game/info/isAlive", {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then(response => response.json())
+        .then(data => {
+          isAlive = data.isAlive
+        })
+
         fetch(BASE_URL + "/game/info", {
             method: 'GET',
             headers: {
@@ -250,6 +331,7 @@
             }
         }).then(response => response.json())
         .then(data => {
+
             const proff = document.getElementById("your_proff")
             const age = document.getElementById("your_age")
             const item = document.getElementById("your_item")
@@ -307,7 +389,6 @@
         infoBlock.className = 'main_info';
 
         const labels = ['Профессия', 'Хобби', 'Возраст', 'Здоровье', 'Предмет', "Факт"];
-        console.log(info)
 
         for (let i = 0; i < labels.length; i++) {
             const p = document.createElement('p');
@@ -327,23 +408,81 @@
       }
     }
 
-    function edit_user(user_id){
-
-    }
-
-
-
-    function vote() {
-      alert("Голос отправлен!");
-    }
-
-    function reveal() {
-      alert("Вы рассказали свою историю!");
-    }
-
 
     load_self()
 
   </script>
 </body>
+<script> // vote script
+  change_vote(0)
+  
+  function start_voiting(users_data){
+    users_id = Object.keys(users_data)
+    clear_vote()
+    users_id.forEach(user_id => {
+      add_player_to_vote(users_data[user_id], user_id)
+    });
+  }
+
+  function change_vote(state){ // 0-inactive 1-active
+      const vote = document.getElementById("vote-container")
+
+      if (state == 0){
+        vote.style.opacity = 0
+        vote.style.top = "-100%"
+      }
+
+      if (state == 1){
+        vote.style.opacity = 1
+        vote.style.top = "50%"
+        
+      }
+  } 
+
+  function clear_vote(){
+      const listContainer = document.getElementById('players-list');
+      while (listContainer.firstChild) {
+          listContainer.removeChild(listContainer.firstChild);
+      }
+  }
+
+  function add_player_to_vote(username, user_id){
+      const listContainer = document.getElementById('players-list');
+      const playerDiv = document.createElement('div');
+      playerDiv.className = 'vote_player';
+      playerDiv.id = `vote_user_${user_id}`
+
+      const nameP = document.createElement('p');
+      nameP.className = 'player-name';
+      nameP.textContent = username;
+
+      const voteBtn = document.createElement('button');
+      voteBtn.className = 'vote-btn';
+      voteBtn.textContent = 'Проголосовать';
+
+      voteBtn.onclick = function() {
+        vote(user_id);
+      };
+
+      playerDiv.appendChild(nameP);
+      playerDiv.appendChild(voteBtn);
+
+      listContainer.appendChild(playerDiv);
+  }
+
+  function vote(user_id){
+    if (isAlive == true)
+    {
+      game_socket.send(JSON.stringify({
+                type: "vote",
+                vote_user: user_id
+              }))
+    }
+  }
+  
+
+
+
+  
+</script>
 </html>

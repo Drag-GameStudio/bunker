@@ -118,7 +118,7 @@
   </div>
 
   <script>
-    const BASE_URL = 'http://127.0.0.1:8080';
+    const BASE_URL = window.location.origin;
 
     function redirect_to_lobby(lobby_id){
       window.location.href = BASE_URL + '/lobby/' + lobby_id;
@@ -169,7 +169,6 @@
           
         }).then(response => {
           if (response.ok) {
-            alert("Лобби создано успешно!");
             response.json().then(data => {
               console.log("Lobby created with ID:", data.session_id);
               connect_to_lobby(data.session_id);

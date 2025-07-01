@@ -22,7 +22,7 @@ def login_user(request):
         user.save()
 
         response = HttpResponse("User created successfully")
-        response.set_cookie("user_id", user.id, max_age=3600)
+        response.set_cookie("user_id", user.id, max_age=3600 * 3) # даем 3 часа куки
         
 
         return response

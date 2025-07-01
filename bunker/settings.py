@@ -27,7 +27,8 @@ DEBUG = True
 
 
 VARIABLE_OF_STATE = ["wating", "play", "ended"]
-
+VARIABLE_OF_LAP_STATE = ["player_move", "voting", "end"]
+MIDDLELINK = "127.0.0.1:8080"
 
 ALLOWED_HOSTS = []
 

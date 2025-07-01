@@ -149,3 +149,5 @@ class LobbyConsumer(AsyncWebsocketConsumer):
             "usernames": users_name,
             "users_id": users_id
         }))
+
+

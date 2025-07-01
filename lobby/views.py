@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 from .models import User, Session
 from django.views.decorators.csrf import csrf_exempt
-
+from bunker.settings import MIDDLELINK
 
 # Create your views here.
 def render_lobby(request, lobby_id):
@@ -16,7 +16,7 @@ def render_lobby(request, lobby_id):
         return HttpResponse("User not found.", status=404)
     
     if int(lobby_id) == user.session.id:
-        return render(request, "lobby/lobby.html", {"lobby_id": lobby_id})
+        return render(request, "lobby/lobby.html", {"lobby_id": lobby_id, "MIDDLELINK": MIDDLELINK})
     
     return HttpResponse("You are not allowed to view this lobby.", status=403)
 

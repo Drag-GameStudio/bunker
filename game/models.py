@@ -1,5 +1,5 @@
 from django.db import models
-from lobby.models import User
+from lobby.models import User, Session
 
 # Create your models here.
 class UserInfo(models.Model):
@@ -54,6 +54,10 @@ class UserInfo(models.Model):
 
         return user_data
 
-            
+class Voiting(models.Model):
+    vote_user = models.ForeignKey(User, on_delete=models.CASCADE, primary_key=True)
+    session = models.ForeignKey(Session, on_delete=models.CASCADE)
+    count_of_voice = models.IntegerField(default=0)
+    have_voted = models.BooleanField(default=False)
 
 
