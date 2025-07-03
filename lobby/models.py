@@ -1,6 +1,7 @@
 from django.db import models
 from django.apps import apps
 from bunker.settings import VARIABLE_OF_STATE, VARIABLE_OF_LAP_STATE
+from game.game_handler.gpt_handler import get_situation
 import random
 
 class Session(models.Model):
@@ -11,7 +12,7 @@ class Session(models.Model):
     
     lap_state = models.CharField(max_length=100, default=VARIABLE_OF_LAP_STATE[0])
     situation = models.CharField(max_length=1000, default="")
-
+    current_situation = models.CharField(max_length=1000, default="")
     
 
     def __str__(self):
@@ -106,6 +107,11 @@ class Session(models.Model):
         if self.current_user == user.id:
             self.current_user = self.get_line()[0]
 
+        self.save()
+
+    def start_lap(self):
+        
+        self.current_situation = get_situation(self)
         self.save()
 
 class User(models.Model):

@@ -44,14 +44,13 @@ class GameConsumer(AsyncWebsocketConsumer):
                         "type": "end_voiting",
                     }
                 )
-                
                 await self.channel_layer.group_send(
                     f"game_user{await self.get_user_session_id(self.user)}{kick_user_id}",
                     {
                         "type": "die_user",
                     }
                 )
-                
+                await self.start_lap()
                 await self.load_all(self.group_name)
 
         elif data["type"] == "load_voting":
@@ -64,6 +63,9 @@ class GameConsumer(AsyncWebsocketConsumer):
                 }
             )
 
+    @sync_to_async
+    def start_lap(self):
+        self.user.session.start_lap()
 
     @sync_to_async
     def get_users_data(self):
@@ -90,6 +92,8 @@ class GameConsumer(AsyncWebsocketConsumer):
         self.user.session.refresh_from_db()
         game_info["current_move_user"] = self.user.session.current_user
         game_info["current_lap_state"] = self.user.session.lap_state
+        game_info["current_situation"] = self.user.session.current_situation
+
 
 
         return game_info

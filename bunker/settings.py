@@ -28,9 +28,9 @@ DEBUG = True
 
 VARIABLE_OF_STATE = ["wating", "play", "ended"]
 VARIABLE_OF_LAP_STATE = ["player_move", "voting", "end"]
-MIDDLELINK = "127.0.0.1:8080"
+MIDDLELINK = "4b80-185-191-178-105.ngrok-free.app"
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition

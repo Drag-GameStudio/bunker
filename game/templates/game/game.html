@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <title>Игровое поле — Бункер Онлайн</title>
   <style>
+    
+
     body {
       margin: 0;
       padding: 0;
@@ -172,9 +174,30 @@
       background: #5146e1;
     }
 
+    .anim_block{
+      position: absolute;
+      height: 100%;
+      width: 100%;
+      background: #303050;
+      font-size: 100px;
+      display: flex;
+      justify-content: center; 
+      align-items: center; 
+      transition: all 0.7s ease;
+      left: -500%;
+      z-index: 100;
+      
+    }
+    
+
   </style>
 </head>
 <body>
+
+  <div id="anim_screen" class="anim_block">
+    <h1>Loading</h1>
+  </div>
+
   <div class="sidebar">
     <h2>Вы</h2>
     <div id="your_proff" class="info-block">Профессия: врач</div>
@@ -189,6 +212,9 @@
     <div class="top-info">
       <h2>Ситуация:</h2>
       <p>{{situation}}</p>
+
+      <h2>Проблема:</h2>
+      <p id="problem_text"></p>
     </div>
 
     <div class="content-row">
@@ -218,9 +244,14 @@
   <script> // socket
 
     const MIDDLELINK = "{{MIDDLELINK}}"
+    adder = ""
+    if (window.location.origin[4] == "s"){
+      adder = "s"
+    }
+
     isAlive = true
 
-    const game_socket = new WebSocket("ws://" + MIDDLELINK +"/ws/game/");
+    const game_socket = new WebSocket("ws" + adder + "://" + MIDDLELINK +"/ws/game/");
     
     
     function parseCookies() {
@@ -247,9 +278,12 @@
         }
         else if (data.type == "end_voiting"){
           change_vote(0)
+          reload_screen()
+
         }
         else if(data.type == "die"){
           isAlive = false
+
         }
     }
 
@@ -277,13 +311,15 @@
       curr_user.classList.add("active_card")
 
 
-      curr_lap_state = data.current_lap_state // Дописать
-
+      curr_lap_state = data.current_lap_state 
       if (curr_lap_state == "voting"){
         game_socket.send(JSON.stringify({
           type: "load_voting"
         }))
       }
+
+      const problem_text = document.getElementById("problem_text")
+      problem_text.innerHTML = data.current_situation
     }
  
     function load_all_info(data){
@@ -441,9 +477,13 @@
 
   function clear_vote(){
       const listContainer = document.getElementById('players-list');
+
       while (listContainer.firstChild) {
           listContainer.removeChild(listContainer.firstChild);
       }
+
+      const VoteContainer = document.getElementById('vote-container');
+      VoteContainer.style.background = "#2e2e45"
   }
 
   function add_player_to_vote(username, user_id){
@@ -473,6 +513,8 @@
   function vote(user_id){
     if (isAlive == true)
     {
+      const listContainer = document.getElementById('vote-container');
+      listContainer.style.background = "green"
       game_socket.send(JSON.stringify({
                 type: "vote",
                 vote_user: user_id
@@ -480,6 +522,17 @@
     }
   }
   
+
+  function reload_screen(){
+    const reload_screen = document.getElementById("anim_screen")
+    reload_screen.style.left = "0%"
+
+    setTimeout(() => {
+    reload_screen.style.left = "-100%"
+
+    }, 2000)
+  }
+
 
 
 

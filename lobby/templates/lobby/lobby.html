@@ -105,6 +105,11 @@
   </div>
 
   <script>
+
+    adder = ""
+    if (window.location.origin[4] == "s"){
+      adder = "s"
+    }
     const BASE_URL = window.location.origin;
     const MIDDLELINK = "{{MIDDLELINK}}"
     const userList = document.getElementById('user-list');
@@ -128,7 +133,7 @@
         })
     }
 
-    const lobby_socket = new WebSocket("ws://" + MIDDLELINK + "/ws/lobby/");
+    const lobby_socket = new WebSocket("ws" + adder + "://" + MIDDLELINK + "/ws/lobby/");
 
 
     function redirect_to_game(){
